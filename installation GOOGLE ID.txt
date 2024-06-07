@@ -1,6 +1,0 @@
-set GOOGLE_CLIENT_ID=699098142300-goboqkiijeq9q3ik3tr746gc5httdge0.apps.googleusercontent.com
-set GOOGLE_CLIENT_SECRET=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
-set FLASK_APP=app
-set FLASK_ENV=development
-set FLASK_DEBUG=1
-flask run --cert=adhoc
