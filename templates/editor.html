@@ -1,0 +1,404 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	<div class="bg-body-tertiary">
+		<script>
+			var sID = "{{ simulation['s_id'] }}";
+			var PDRBFeature = JSON.parse({{PDRB|tojson|safe}});
+			var ResultFeature = JSON.parse({{RESULT|tojson|safe}});
+			var sStatus = "{{ simulation['status'] }}";
+		</script>
+		<div><p class="lead pt-2 text-center simt">Judul Simulasi : {% block title %} {{ simulation['s_name'] }} {% endblock %}</p></div>
+		
+		<!-- map section -->
+		<div id="map" class="sidebar-map">
+			
+			<div class="bg-spinner" style="display:none;">
+				<div class="top-50 start-50" style="position:absolute;margin:-3rem 0 0 -3rem;">
+					<div class="spinner-grow text-primary" role="status" style="width: 6rem; height: 6rem;"></div>
+					<div class="text-center fs-6 fw-bolder text-white" style="margin: -4rem;">Loading result...</div>
+				</div>
+			</div>
+			
+			<!-- toast section -->
+			<div class="toast-container mt-5 p-3 top-0 start-50 translate-middle">
+				<div id="liveToast" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true">
+					<div class="d-flex">
+					<div class="toast-body"></div>
+					<button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+				  </div>
+				</div>
+			</div>
+			<div id="button-wrapper" class="start-50 translate-middle pt-5 mt-5" style="display:none">
+				<button type="button" id="BtnSim" class="btn btn-primary btn-sm">
+					<span class="lead" id="simMsg"></span><br/>
+					<span>Untuk menjalankan simulasi, click tombol ini</span>
+				</button>
+			</div>
+			
+			<!-- Create Sector Param -->
+			<div class="modal fade" id="createSector" aria-labelledby="createSectorLabel">
+			  <div class="modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+				<div class="modal-content">
+				  <div class="modal-header">
+					<h5 class="modal-title" id="createSectorLabel">Parameter baru</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				  </div>
+				  <div class="modal-body">
+					<form id="create-param" method="post" action="/api/sector">
+					<input type="hidden" id="simluationID" name="simluationID" value="{{ simulation.s_id }}"/>
+					<div class="input-group input-group-sm mb-3">
+						<div class="input-group-text w-25">Skala:</div>
+						<select class="form-select form-select-sm" id="scaleParam" name="scaleParam" data-placeholder="Pilih skala.."></select>
+					</div>
+					<div class="input-group input-group-sm mb-3">
+						<div class="input-group-text w-25">Lokasi:</div>
+						<select class="form-select form-select-sm" id="locParam" name="locParam" data-placeholder="Pilih lokasi..">
+							<option value="" selected>Pilih lokasi...</option>
+						</select>
+					</div>
+					<div class="mb-2">
+						<span>Nilai (%)</span>
+					</div>
+					<div id="sectorParam"></div>
+					</form>
+				  </div>
+				  <div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+					<button type="submit" class="btn btn-primary" id="create">Tambah</button>
+				  </div>
+				</div>
+			  </div>
+			</div>
+			
+			<!-- Edit Sector Param -->
+			<div class="modal fade" id="editSector" tabindex="-1" aria-labelledby="editSectorLabel">
+			  <div class="modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+				<div class="modal-content">
+				  <div class="modal-header">
+					<h5 class="modal-title" id="editSectorLabel">Ubah Parameter</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				  </div>
+				  <div class="modal-body">
+					<form id="edit-param" method="put" action="/api/sector">
+					<input type="hidden" id="simluationID" name="simluationID" value="{{ simulation.s_id }}"/>
+					<input type="hidden" id="pid" name="pid" class="pid" />
+					<div class="input-group input-group-sm mb-3">
+						<div class="input-group-text w-25">Skala:</div>
+						<select class="form-select form-select-sm" id="scaleEdit" name="scaleEdit" data-placeholder="Pilih skala.."></select>
+					</div>
+					<div class="input-group input-group-sm mb-3">
+						<div class="input-group-text w-25">Lokasi:</div>
+						<select class="form-select form-select-sm" id="locEdit" name="locEdit" data-placeholder="Pilih lokasi..">
+							<option value="" selected>Pilih lokasi...</option>
+						</select>
+					</div>
+					<div class="mb-2">
+						<span>Nilai (%)</span>
+					</div>
+					<div id="sectorEdit"></div>
+					</form>
+				  </div>
+				  <div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+					<button type="submit" class="btn btn-primary" id="update">Update</button>
+				  </div>
+				</div>
+			  </div>
+			</div>
+			
+			<!-- Delete Sector Param -->
+			<div class="modal fade" id="deleteSector" tabindex="-1" aria-labelledby="delSectorLabel" aria-hidden="true">
+			  <div class="modal-dialog modal-lg">
+				<div class="modal-content">
+				  <div class="modal-header">
+					<h5 class="modal-title" id="delSectorLabel">Hapus Parameter</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				  </div>
+				  <div class="modal-body">
+					<input type="hidden" name="pid" class="pid" />
+					<p class="sid-text">Anda yakin akan menghapus parameter?</p>
+				  </div>
+				  <div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+					<button type="button" class="btn btn-primary" id="delete">Hapus</button>
+				  </div>
+				</div>
+			  </div>
+			</div>
+			
+			<!-- Create Graph Param -->
+			<div class="modal fade" id="createGraph" tabindex="-1" aria-labelledby="createGraphLabel" aria-hidden="true">
+			  <div class="modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+				<div class="modal-content">
+				  <div class="modal-header">
+					<h5 class="modal-title" id="createGraphLabel">Parameter Graph baru</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				  </div>
+				  <div class="modal-body">
+					<form id="create-graph" method="post" action="/api/graph">
+					<input type="hidden" id="simluationID" name="simluationID" value="{{ simulation.s_id }}"/>
+					<div class="row">
+						<div class="col-md-4">
+							<label for="scaleOrigin" class="col-form-label">Skala Lokasi Asal:</label>
+							<select class="form-select" id="scaleOrigin" name="scaleOrigin"></select>
+						</div>
+						<div class="col-md-8">
+							<label for="locOrigin" class="col-form-label">Lokasi Asal:</label>
+							<select class="form-select" id="locOrigin" name="locOrigin"></select>
+						</div>
+						<div class="col-md-4">
+							<label for="scaleDest" class="col-form-label">Skala Lokasi Tujuan:</label>
+							<select class="form-select" id="scaleDest" name="scaleDest"></select>
+						</div>
+						<div class="col-md-8">
+							<label for="locDest" class="col-form-label">Lokasi Tujuan:</label>
+							<select class="form-select" id="locDest" name="locDest"></select>
+						</div>
+						<div class="col-md-12">
+							<label for="direction" class="col-form-label">Arah Hubungan:</label>
+							<select class="form-select" id="direction" name="direction">
+								<option value="1">In & Out</option>
+								<option value="2">In</option>
+								<option value="3">Out</option>
+							</select>
+						</div>
+						<div class="col-md-12">
+							<label for="valueGraph" class="col-form-label">Nilai (%)</label>
+							<input type="range" class="form-range" min="-100" max="1000" id="valueGraph" name="valueGraph" onInput="$('#rangeGraphVal').html($(this).val() + '%')" required />
+							<span id="rangeGraphVal">0<!-- Default value --></span>
+						</div>
+					</div>
+					</form>
+				  </div>
+				  <div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+					<button type="submit" class="btn btn-primary" id="create">Tambah</button>
+				  </div>
+				</div>
+			  </div>
+			</div>
+			
+			<!-- Edit Graph Param -->
+			<div class="modal fade" id="editGraph" tabindex="-1" aria-labelledby="editGraphLabel" aria-hidden="true">
+			  <div class="modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+				<div class="modal-content">
+				  <div class="modal-header">
+					<h5 class="modal-title" id="editGraphLabel">Ubah Parameter Graph</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				  </div>
+				  <div class="modal-body">
+					<form id="edit-graph" method="put" action="/api/graph">
+					<input type="hidden" id="simluationID" name="simluationID" value="{{ simulation.s_id }}"/>
+					<input type="hidden" id="gid" name="gid" class="gid" />
+					<div class="row">
+						<div class="col-md-4">
+							<label for="scaleOriginEdit" class="col-form-label">Skala Lokasi Asal:</label>
+							<select class="form-select" id="scaleOriginEdit" name="scaleOriginEdit"></select>
+						</div>
+						<div class="col-md-8">
+							<label for="locOriginEdit" class="col-form-label">Lokasi Asal:</label>
+							<select class="form-select" id="locOriginEdit" name="locOriginEdit"></select>
+						</div>
+						<div class="col-md-4">
+							<label for="scaleDestEdit" class="col-form-label">Skala Lokasi Tujuan:</label>
+							<select class="form-select" id="scaleDestEdit" name="scaleDestEdit"></select>
+						</div>
+						<div class="col-md-8">
+							<label for="locDestEdit" class="col-form-label">Lokasi Tujuan:</label>
+							<select class="form-select" id="locDestEdit" name="locDestEdit"></select>
+						</div>
+						<div class="col-md-12">
+							<label for="directionEdit" class="col-form-label">Arah Hubungan:</label>
+							<select class="form-select" id="directionEdit" name="directionEdit">
+								<option value="1">In & Out</option>
+								<option value="2">In</option>
+								<option value="3">Out</option>
+							</select>
+						</div>
+						<div class="col-md-12">
+							<label for="valueGraphEdit" class="col-form-label">Nilai (%)</label>
+							<input type="range" class="form-range" min="-100" max="1000" id="valueGraphEdit" name="valueGraphEdit" onInput="$('#rangeGraphEditVal').html($(this).val() + '%')" required />
+							<span id="rangeGraphEditVal">0<!-- Default value --></span>
+						</div>
+					</div>
+					</form>
+				  </div>
+				  <div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+					<button type="submit" class="btn btn-primary" id="update">Update</button>
+				  </div>
+				</div>
+			  </div>
+			</div>
+			
+			<!-- Delete Graph Param -->
+			<div class="modal fade" id="deleteGraph" tabindex="-1" aria-labelledby="delGraphLabel" aria-hidden="true">
+			  <div class="modal-dialog modal-lg">
+				<div class="modal-content">
+				  <div class="modal-header">
+					<h5 class="modal-title" id="delGraphLabel">Hapus Parameter Graph</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				  </div>
+				  <div class="modal-body">
+					<input type="hidden" name="gid" class="gid" />
+					<p class="sid-text">Anda yakin akan menghapus graph ini?</p>
+				  </div>
+				  <div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+					<button type="button" class="btn btn-primary" id="delete">Hapus</button>
+				  </div>
+				</div>
+			  </div>
+			</div>
+			
+			<!-- Delete Graph Param -->
+			<div class="modal fade" id="tableModal" tabindex="-1" aria-labelledby="tablePredLabel" aria-hidden="true">
+			  <div class="modal-dialog modal-dialog-scrollable modal-xl modal-fullscreen-md-down">
+				<div class="modal-content">
+				  <div class="modal-header">
+					<h5 class="modal-title" id="tablePredLabel">Data Hasil Prediksi: {{ simulation['s_name'] }}</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				  </div>
+				  <div class="modal-body">
+					<ul class="nav nav-tabs">
+						<li class="nav-item"><a class="nav-link active" href="#summary" data-bs-toggle="tab">Summary</a></li>
+						<li class="nav-item"><a class="nav-link" href="#tabledata" data-bs-toggle="tab">Prediction Data</a></li>
+					</ul>
+					<div class="tab-content">
+						<div class="tab-pane container active" id="summary">
+							<div class="my-3">
+								<div class="row">
+									<div class="col-md-8">
+										<h5>Persentase proporsi kontribusi PDRB (hasil prediksi)</h5>
+									</div>
+									<div class="col-md-4">
+										<select class="form-select form-select-sm sel-sum" aria-label="Select Summary">
+										  <option value="1" selected>Share Kontibusi KTI & KBI</option>
+										  <option value="2">Share Kontibusi Wilayah Metropolitan</option>
+										  <option value="3">Share Kontibusi per Pulau</option>
+										  <option value="4">Share Kontibusi per Provinsi</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<span id="desc_summary" class="mt-3 text-center"></span>
+							<div id="legend-container" class="d-flex justify-content-center my-3"></div>
+							<div class="row justify-content-md-center text-center">
+								<div class="col-lg-6">
+									<canvas id="riilChart"></canvas>
+								</div>
+								<div class="col-lg-6">
+									<canvas id="predChart"></canvas>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane fade" id="tabledata">
+							<div class="my-3">
+								<h5 class="mb-3 text-center">Data per Kabupaten/Kota (hasil prediksi)</h5>
+								<table id="predTable" class="stripe row-border order-column nowrap" style="width:100%">
+									<thead>
+										<tr>
+											<th>Kode Dagri</th>
+											<th>Kabupaten/Kota</th>
+											<th>KTI/KBI</th>
+											<th>Metropolitan</th>
+											<th>PDRB 2020 (Milyar)</th>
+											<th>Prediksi PDRB (Milyar)</th>
+											<th>Selisih (Milyar)</th>
+											<th>% Selisih</th>
+										</tr>
+									</thead>
+									<tbody id="predData"></tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				  </div>
+				</div>
+			  </div>
+			</div>
+			
+		</div>
+		
+		<!-- sidebar section -->
+		<div id="sidebar" class="leaflet-sidebar collapsed">
+
+			<!-- nav tabs -->
+			<div class="leaflet-sidebar-tabs">
+				<!-- top aligned tabs -->
+				<ul role="tablist">
+					<li><a href="#pdrb" role="tab"><i class="fa-solid fa-bars"></i></a></li>
+					<li><a href="#graph" role="tab"><i class="fa-solid fa-diagram-project"></i></a></li>
+					<li><a href="#info" role="tab"><i class="fa-solid fa-circle-info"></i></a></li>
+				</ul>
+			</div>
+
+			<!-- panel content -->
+			<div class="leaflet-sidebar-content">
+				<div class="leaflet-sidebar-pane" id="pdrb">
+					<h1 class="leaflet-sidebar-header">Adjust Sector<span class="leaflet-sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+					<div class="py-3">
+						<button type="button" class="btn btn-primary btn-sm mb-3" data-bs-toggle="modal" data-bs-target="#createSector">Tambah Parameter</button>
+						<table id="table-param" class="display compact stripe row-border order-column" style="width:100%">
+						  <thead>
+							<tr>
+							  <th></th>
+							  <th>Skala</th>
+							  <th>Lokasi</th>
+							  <th class="text-end">Aksi</th>
+							</tr>
+						  </thead>
+						  <tbody id="param-sector"></tbody>
+						</table>
+					</div>
+				</div>
+				
+				<div class="leaflet-sidebar-pane" id="graph">
+					<h1 class="leaflet-sidebar-header">Adjust Graph<span class="leaflet-sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+					<div class="py-3">
+						<button type="button" class="btn btn-primary btn-sm mb-3" data-bs-toggle="modal" data-bs-target="#createGraph">Tambah Parameter Graph</button>
+						<table id="table-graph" class="table table-light table-sm align-middle">
+						  <thead>
+							<tr>
+							  <th>#</th>
+							  <th>Asal</th>
+							  <th>Tujuan</th>
+							  <th>Arah</th>
+							  <th class="text-center">+/-</th>
+							  <th class="text-end">Aksi</th>
+							</tr>
+						  </thead>
+						  <tbody id="param-graph"></tbody>
+						</table>
+					</div>
+				</div>
+				
+				<div class="leaflet-sidebar-pane" id="info">
+					<form id="update-info" method="post" action="/api/update">
+						<h1 class="leaflet-sidebar-header">Simulation Information<span class="leaflet-sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+						<div class="mb-3">
+							<label for="simName" class="col-form-label text-dark">Judul simulasi:</label>
+							<input type="text" class="form-control form-control-sm" id="simName" name="simName" value="{{ simulation['s_name'] }}" />
+						</div>
+						<div class="mb-3">
+							<label for="simDesc" class="col-form-label text-dark">Deskripsi:</label>
+							<textarea rows="4" class="form-control form-control-sm" id="simDesc" name="simDesc">{{ simulation['s_description'] }}</textarea>
+						</div>
+						<button type="submit" class="btn btn-sm btn-primary" id="update-info">Update</button>
+					</form>
+					<div class="mt-3">
+						<span>Jenis simulasi:</span>
+						<span id="s-type">{% if simulation['s_type'] == "0" %} Lapangan Usaha {% else %} Pengeluaran {% endif %}</span>
+					</div>
+					<div class="mt-2">
+						<span>Tanggal simulasi terakhir:</span>
+						<span>{{ simulation['s_dt'] }}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+	
+{% endblock %}

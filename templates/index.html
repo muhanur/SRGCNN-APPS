@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	<div class="bg-body-tertiary py-5 text-center">
+		<div class="container my-5 py-5">
+			<h1 class="pb-5">{% block title %} SRGCNN-GW {% endblock %}</h1>
+			<p class="lead">SRGCNN-GW adalah sebuah platform online yang dibangun menggunakan kecerdasan buatan untuk membuat simulasi pertumbuhan PDRB di Kabupaten/Kota. SRGCNN-GW dibangun berdasarkan data history PDRB tahun 2014 hingga 2020 dengan telah mempertimbangkan hubungan antar Kabupaten/Kota di Indonesia berbasis data Origin-Destination Kementerian Perhubungan tahun 2011.</p>
+			<p class="lead">
+				<a href="{{ url_for('simulation') }}" class="btn btn-primary btn-md fw-bold">Buat simulasi</a>
+				<a href="#hasil" rel="noopener" class="btn btn-md btn-light border-white bg-white">Lihat hasil simulasi</a>
+			</p>
+		</div>
+	</div>
+	<div id="hasil" class="container pt-5">
+		<h1 class="text-center pb-5">Lihat Beberapa Hasil Simulasi</h1>
+		<p class="lead text-center">Anda dapat melihat beberapa hasil simulasi yang telah dibuat oleh beberapa pengguna pada daftar berikut.</p>
+		<table id="sim-publish" class="stripe row-border order-column" style="width:100%">
+		  <thead>
+			<tr>
+			  <th class="nowrap" scope="col">Nama Simulasi</th>
+			  <th scope="col">Deskripsi</th>
+			  <th scope="col">Tgl dibuat</th>
+			  <th scope="col">Tgl simulasi</th>
+			  <th scope="col">Pembuat</th>
+			</tr>
+		  </thead>
+		  <tbody>
+			{% for row in simulations %}
+			<tr>
+			  <td><a href="{{ url_for('simulation_viewer', id=row.s_id) }}" target="_self">{{ row.s_name }}</a></td>
+			  <td>{{ row.s_description }}</td>
+			  <td>{{ row.create_dt }}</td>
+			  <td>{{ row.s_dt }}</td>
+			  <td>{{ row.name }}</td>
+			</tr>
+			{% endfor %}
+		  </tbody>
+		</table>
+	</div>
+{% endblock %}

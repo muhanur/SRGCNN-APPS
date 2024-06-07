@@ -1,0 +1,12 @@
+requests
+python-dotenv
+flask
+flask-login
+oauthlib
+mysql
+mysql-connector-python
+shortuuid
+pandas
+scikit-learn
+geopandas
+pyopenssl

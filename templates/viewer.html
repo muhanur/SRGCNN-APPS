@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	<div class="bg-body-tertiary">
+		<script>
+			var sID = "{{ simulation['s_id'] }}";
+			var PDRBFeature = JSON.parse({{PDRB|tojson|safe}});
+			var ResultFeature = JSON.parse({{RESULT|tojson|safe}});
+			var sStatus = "{{ simulation['status'] }}";
+		</script>
+		<div><p class="lead pt-2 text-center simt">Judul Simulasi : {% block title %} {{ simulation['s_name'] }} {% endblock %}</p></div>
+		<div id="map">
+			
+			<!-- Delete Graph Param -->
+			<div class="modal fade" id="tableModal" tabindex="-1" aria-labelledby="tablePredLabel" aria-hidden="true">
+			  <div class="modal-dialog modal-dialog-scrollable modal-xl modal-fullscreen-md-down">
+				<div class="modal-content">
+				  <div class="modal-header">
+					<h5 class="modal-title" id="tablePredLabel">Data Hasil Prediksi: {{ simulation['s_name'] }}</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				  </div>
+				  <div class="modal-body">
+					<ul class="nav nav-tabs">
+						<li class="nav-item"><a class="nav-link active" href="#summary" data-bs-toggle="tab">Summary</a></li>
+						<li class="nav-item"><a class="nav-link" href="#param" data-bs-toggle="tab">Parameter</a></li>
+						<li class="nav-item"><a class="nav-link" href="#tabledata" data-bs-toggle="tab">Data Prediksi</a></li>
+					</ul>
+					<div class="tab-content">
+						<div class="tab-pane container active" id="summary">
+							<div class="my-3">
+								<div class="row">
+									<div class="col-md-8">
+										<h5>Persentase proporsi kontribusi PDRB (hasil prediksi)</h5>
+									</div>
+									<div class="col-md-4">
+										<select class="form-select form-select-sm sel-sum" aria-label="Select Summary">
+										  <option value="1" selected>Share Kontibusi KTI & KBI</option>
+										  <option value="2">Share Kontibusi Wilayah Metropolitan</option>
+										  <option value="3">Share Kontibusi per Pulau</option>
+										  <option value="4">Share Kontibusi per Provinsi</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<span id="desc_summary" class="mt-3 text-center"></span>
+							<div id="legend-container" class="d-flex justify-content-center my-3"></div>
+							<div class="row justify-content-md-center text-center">
+								<div class="col-lg-6">
+									<canvas id="riilChart"></canvas>
+								</div>
+								<div class="col-lg-6">
+									<canvas id="predChart"></canvas>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane fade" id="param">
+							<div class="my-3">
+								<h5 class="mb-3 text-center">Parameter Simulasi</h5>
+								<div class="row justify-content-md-center">
+									<div class="col-md-6 container">
+										<h6 class="mt-3 text-center">Parameter Sektor</h6>
+										<table id="table-param" class="table table-light table-sm compact stripe row-border" style="width:100%">
+										  <thead>
+											<tr>
+											  <th></th>
+											  <th>Skala</th>
+											  <th>Lokasi</th>
+											</tr>
+										  </thead>
+										  <tbody id="param-sector"></tbody>
+										</table>
+									</div>
+									<div class="col-md-6 container">
+										<h6 class="mt-3 text-center">Parameter Graph</h6>
+										<table id="table-graph" class="table table-light table-sm compact stripe row-border" style="width:100%">
+										  <thead>
+											<tr>
+											  <th>#</th>
+											  <th>Asal</th>
+											  <th>Tujuan</th>
+											  <th>Arah</th>
+											  <th class="text-center">+/-</th>
+											</tr>
+										  </thead>
+										  <tbody id="param-graph"></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="tab-pane fade" id="tabledata">
+							<div class="my-3">
+								<h5 class="mb-3 text-center">Data per Kabupaten/Kota (hasil prediksi)</h5>
+								<table id="predTable" class="display stripe row-border order-column nowrap" style="width:100%">
+									<thead>
+										<tr>
+											<th>Kode Dagri</th>
+											<th>Kabupaten/Kota</th>
+											<th>KTI/KBI</th>
+											<th>Metropolitan</th>
+											<th>PDRB 2020 (Milyar)</th>
+											<th>Prediksi PDRB (Milyar)</th>
+											<th>Selisih (Milyar)</th>
+											<th>% Selisih</th>
+										</tr>
+									</thead>
+									<tbody id="predData"></tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				  </div>
+				</div>
+			  </div>
+			</div>
+			
+		</div>
+	</div>
+{% endblock %}

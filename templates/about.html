@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	<div class="bg-body-tertiary py-5">
+		<div class="container my-5 py-5">
+			<h1 class="text-center pb-5">{% block title %} Tentang SRGCNN-GW {% endblock %}</h1>
+			<p class="lead">SRGCNN-GW dibangun menggunakan algoritma <b>Spatial regression graph convolutional neural networks (SRGCNNs)</b> yang dikembangkan oleh Di Zhu et.al. yang dipublikasi pada jurnal yang berjudul <a href="https://link.springer.com/article/10.1007/s10707-021-00454-x" target="_blank">"Spatial regression graph convolutional neural networks: A deep learning paradigm for spatial multivariate distributions"</a>. Repositori juga dipublikasi pada platform <a href="https://github.com/dizhu-gis/SRGCNN" target="_blank">Github</a>. Dalam implementasi pengembangannya, data PDRB yang digunakan adalah data PDRB tingkat kabupaten/kota tahun 2014-2020 yang bersumber dari <a href="https://www.bps.go.id/" target="_blank">Badan Pusat Statistik</a>. Dimana pada periode setelah tahun 2014 tidak ada lagi pemekaran kabupaten/kota hingga saat ini.</p>
+			<p class="lead">Untuk pengimplementasian algoritma ini, data graph yang digunakan adalah data <a href="https://attn-barang.dephub.go.id/">Origin-Destination (OD)</a> atau disebut juga sebagai Data Asal-Tujuan Transportasi Nasional tahun 2011 dari Badan Penelitian dan Pengembangan Perhubungan, Kementerian Perhubungan. Dimana data ini berisi tentang distribusi barang dan orang antar kabupaten/kota. Data ini digunakan untuk mendapatkan hubungan keterkaitan antar kabupaten/kota di Indonesia. Data ini lebih <i>real</i> menggambarkan hubungan keterkaitan kabupaten/kota di Indonesia dibandingkan menggunakan hubungan k-nearest neighbors (KNN) maupun Queen Contiguity. Dimana hubungan menggunakan KNN maupun Queen tidak dapat menggambarkan hubungan keterkaitan di Indonesia sebagai negara kepulauan.</p>
+		</div>
+	</div>
+{% endblock %}

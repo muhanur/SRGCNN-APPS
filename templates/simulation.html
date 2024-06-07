@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	{% if login == True %}
+		<div class="bg-body-tertiary py-3">
+			<div class="container py-2">
+				<div class="row">
+					<div class="col-md-4 text-center">
+						<div><img src="{{current_user.profile_pic}}" alt="Google profile pic" class="rounded-circle"></div>
+						<p>Hello, {{data[0]}}!</p>
+						<a class="btn btn-md btn-primary" href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+					</div>
+					<div class="col-md-8">
+						<h3 class="pb-3">{% block title %} Simulasi {% endblock %}</h3>
+						<button type="button" class="btn btn-md btn-primary d-block mb-4" data-bs-toggle="modal" data-bs-target="#createModal"><i class="fa-regular fa-square-plus"></i> Buat Simulasi</button>
+						<p>Dibawah ini adalah daftar simulasi yang telah anda buat. Jika belum terdapat simulasi pada daftar ini, klik "Buat Simulasi"</p>
+						<div class="list-group">
+							{% for row in simulations %}
+							<div class="list-group-item list-group-item-action">
+								<div class="d-flex w-100 justify-content-between">
+								  <h5 class="mb-1">{{ row.s_name }}</h5>
+								  <div>
+								  <div class="btn-group btn-group-sm" role="group">
+									  <a class="btn btn-secondary" href="{{ url_for('simulation_editor', id=row.s_id) }}" data-toggle="tooltip" data-placement="top" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
+									  <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#copyModal" data-sid="{{ row.s_id }}" data-sname="{{ row.s_name }}" data-toggle="tooltip" data-placement="top" title="Duplicate"><i class="fa-solid fa-copy"></i></button>
+									  <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteModal" data-sid="{{ row.s_id }}" data-sname="{{ row.s_name }}" data-toggle="tooltip" data-placement="top" title="Delete"><i class="fa-solid fa-trash"></i></button>
+								  </div>
+								  </div>
+								</div>
+								<small class="text-muted">Created: {{ row.create_dt }}</small><br>
+								<small class="text-muted">Simulated: {{ row.s_dt }}</small>
+								<p class="mb-1">{{ row.s_description }}</p>
+								<div class="form-check form-switch">
+									<input class="form-check-input publish" type="checkbox" id="publish" {% if row.publish %}checked{% endif %} data-sid="{{ row.s_id }}">
+									<label class="form-check-label" for="publish">Publish</label>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+		  <div class="modal-dialog modal-lg">
+			<form id="create" method="post" action="/api/create">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<h5 class="modal-title" id="createModalLabel">Simulasi baru</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			  </div>
+			  <div class="modal-body">
+				  <div class="mb-3">
+					<label for="simType" class="col-form-label">Jenis simulasi:</label>
+					<select class="form-select" id="simType" name="simType" disabled>
+					  <option value="0" selected>PDRB Lapangan Usaha</option>
+					  <option value="1">PDRB Pengeluaran</option>
+					</select>
+				  </div>
+				  <div class="mb-3">
+					<label for="simYear" class="col-form-label">Tahun PDRB (base):</label>
+					<select class="form-select" id="simYear" name="simYear" disabled>
+					  <option value="2020" selected>Tahun 2020</option>
+					  <option value="2019">Tahun 2019</option>
+					</select>
+				  </div>
+				  <div class="mb-3">
+					<label for="simGraph" class="col-form-label">Graph:</label>
+					<select class="form-select" id="simGraph" name="simGraph" disabled>
+					  <option value="2011" selected>Origin Destination (OD) Tahun 2011</option>
+					</select>
+				  </div>
+				  <div class="mb-3">
+					<label for="simName" class="col-form-label">Nama simulasi:</label>
+					<input type="text" class="form-control" id="simName" name="simName">
+				  </div>
+				  <div class="mb-3">
+					<label for="simDesc" class="col-form-label">Deskripsi:</label>
+					<textarea rows="4" class="form-control" id="simDesc" name="simDesc"></textarea>
+				  </div>
+			  </div>
+			  <div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+				<button type="submit" class="btn btn-primary" id="create">Buat baru</button>
+			  </div>
+			</div>
+			</form>
+		  </div>
+		</div>
+		
+		<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="delModalLabel" aria-hidden="true">
+		  <div class="modal-dialog modal-lg">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<h5 class="modal-title" id="delModalLabel">Hapus Simulasi</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			  </div>
+			  <div class="modal-body">
+				<input type="hidden" name="sid" class="sid" />
+				<p class="sid-text">Anda yakin akan menghapus hasil simulasi?</p>
+			  </div>
+			  <div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+				<button type="button" class="btn btn-primary" id="delete">Hapus</button>
+			  </div>
+			</div>
+		  </div>
+		</div>
+		
+		<div class="modal fade" id="copyModal" tabindex="-1" aria-labelledby="copyModalLabel" aria-hidden="true">
+		  <div class="modal-dialog modal-lg">
+			<form id="copy" method="post" action="/api/copy">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<h5 class="modal-title" id="copyModalLabel">Copy Simulasi</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			  </div>
+			  <div class="modal-body">
+				<input type="hidden" name="sIDOld" class="sIDOld" />
+				<p class="sid-text">Anda yakin akan mengcopy hasil simulasi?</p>
+				<div class="mb-3">
+					<label for="simNameNew" class="col-form-label">Nama simulasi:</label>
+					<input type="text" class="form-control" id="simNameNew" name="simNameNew">
+				</div>
+				<div class="mb-3">
+					<label for="simDescNew" class="col-form-label">Deskripsi:</label>
+					<textarea rows="4" class="form-control" id="simDescNew" name="simDescNew"></textarea>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+					<button type="submit" class="btn btn-primary" id="copy">Copy</button>
+				</div>
+			  </div>
+			</div>
+			</form>
+		  </div>
+		</div>
+		
+		<div class="modal fade" id="publishModal" tabindex="-1" aria-labelledby="pubModalLabel" aria-hidden="true">
+		  <div class="modal-dialog modal-lg">
+			<div class="modal-content">
+			  <div class="modal-header">
+				<h5 class="modal-title" id="pubModalLabel">Publish</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			  </div>
+			  <div class="modal-body">
+				<input type="hidden" name="sid" class="sid" />
+				<p class="sid-text">Anda yakin akan mempublish hasil simulasi?</p>
+			  </div>
+			  <div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+				<button type="button" class="btn btn-primary" id="delete">Hapus</button>
+			  </div>
+			</div>
+		  </div>
+		</div>
+	
+		<div class="toast-container p-3 top-0 end-0">
+			<div id="liveToast" class="toast align-items-center" role="alert" aria-live="assertive" aria-atomic="true">
+				<div class="d-flex">
+				<div class="toast-body"></div>
+				<button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+			  </div>
+			</div>
+		</div>
+		
+	{% else %}
+		<div class="bg-body-tertiary py-5 text-center">
+			<div class="container my-5 py-5">
+				<h1 class="text-center pb-5">Buat Simulasi</h1>
+				<p>Untuk membuat simulasi anda diharuskan login terlebih dahulu.</p>
+				<a class="btn btn-lg btn-light btn-block text-uppercase btn-outline-dark" href="/login"><img src="https://img.icons8.com/color/32/000000/google-logo.png"> Login with Google</a>
+			</div>
+		</div>
+	{% endif %}
+{% endblock %}
